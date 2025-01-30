@@ -2,7 +2,7 @@
 **SEO-friendly AI-powered blog post generator**  
 
 ## 🚀 Overview  
-**Quillyster** is an AI-powered content creation app built with **Next.js** and **OpenAI GPT**, designed for seamless and intelligent blog post generation. With built-in **Auth0 authentication**, **Stripe payments**, and **MongoDB** for data management, Quillster is the ultimate tool for bloggers, content marketers, and businesses looking to automate and optimize their content strategy.  
+**Quillyster** is an AI-powered content creation app built with **Next.js** and **OpenAI GPT**, designed for seamless and intelligent blog post generation. With built-in **Auth0 authentication**, **Stripe payments**, and **MongoDB** for data management, Quillyster is the ultimate tool for bloggers, content marketers, and businesses looking to automate and optimize their content strategy.  
 
 ## ✨ Features  
 - 🧠 **AI-assisted content generation** – Generate high-quality SEO-friendly blog posts instantly.  
@@ -15,8 +15,8 @@
 ## 🔧 Installation  
 Clone the repository and install dependencies:  
 ```bash  
-git clone https://github.com/yourusername/quillster.git  
-cd quillster  
+git clone https://github.com/yourusername/quillyster.git  
+cd quillyster  
 npm install  
 ```
 
