@@ -1,2 +1,1 @@
-import * from "./AppLayout";
-
+export * from "./AppLayout";
