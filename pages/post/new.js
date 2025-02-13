@@ -1,8 +1,24 @@
 import { withPageAuthRequired } from "@auth0/nextjs-auth0";
 import { AppLayout } from "../../components/AppLayout/AppLayout";
+import { useState } from "react";
+import Markdown from "react-markdown";
 
 export default function NewPost(props) {
-  return <div>This is new post</div>;
+  const [postContent, setPostContent] = useState("");
+
+  const handleSubmit = async () => {
+    const response = await fetch(`/api/generatePost`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({ topic, keywords }),
+    });
+    const json = await response.json();
+    setPostContent(json.postContent);
+  };
+
+  return <Markdown>{postContent}</Markdown>;
 }
 
 NewPost.getLayout = function getLayout(page, pageProps) {
