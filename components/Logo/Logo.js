@@ -1,4 +1,5 @@
 import Image from "next/image";
+import LogoImage from "../../public/logo.png";
 
 export const Logo = () => {
   return (
@@ -8,7 +9,7 @@ export const Logo = () => {
       </span>
       <div className="absolute -top-4 right-0 translate-x-2">
         <Image
-          src="/logo.png"
+          src={LogoImage}
           alt="Metallic quill logo"
           width={60}
           height={60}
