@@ -28,7 +28,7 @@ const handler = async (req, res) => {
     } catch (e) {
       console.log("ERROR: ", e);
     }
-    console.log(event.type);
+
     switch (event.type) {
       case "payment_intent.succeeded": {
         const client = await clientPromise;

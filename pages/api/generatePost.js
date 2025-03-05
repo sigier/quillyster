@@ -116,6 +116,17 @@ export default withApiAuthRequired(async function handler(req, res) {
     created: new Date(),
   });
 
+  await db.collection("users").updateOne(
+    {
+      auth0Id: user.sub,
+    },
+    {
+      $inc: {
+        availableTokens: -1,
+      },
+    }
+  );
+
   res.status(200).json({
     postId: post.insertedId,
   });
