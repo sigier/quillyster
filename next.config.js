@@ -4,6 +4,8 @@ const nextConfig = {
   images: {
     domains: ["s.gravatar.com", "lh3.googleusercontent.com"],
   },
+  productionBrowserSourceMaps: false,
+  swcMinify: true,
 };
 
 module.exports = nextConfig;
