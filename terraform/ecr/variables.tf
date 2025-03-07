@@ -27,3 +27,9 @@ variable "default_tags" {
     program = "nextio"
   }
 }
+
+variable "s3_tfstate_bucket_name" {
+  description = "S3-bucket for Terraform state"
+  type        = string
+  default     = "nextio-terraform-state"
+}
