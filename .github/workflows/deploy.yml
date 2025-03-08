@@ -1,6 +1,7 @@
 name: Deploy To AWS
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
@@ -21,17 +22,43 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-region: ${{ secrets.AWS_REGION }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-
       - name: Check and Create S3 Bucket for Terraform State
         env:
           TF_STATE_BUCKET_NAME: ${{ vars.TF_STATE_BUCKET_NAME }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
         run: |
-          if aws s3api head-bucket --bucket "$TF_STATE_BUCKET_NAME" 2>/dev/null; then
+          echo "Checking if S3 bucket $TF_STATE_BUCKET_NAME exists..."
+
+          # Check if the bucket exists and get its region
+          BUCKET_EXISTS=$(aws s3api list-buckets --query "Buckets[].Name" --output text | grep -w "$TF_STATE_BUCKET_NAME" || echo "notfound")
+
+          if [ "$BUCKET_EXISTS" != "notfound" ]; then
             echo "S3 Bucket $TF_STATE_BUCKET_NAME already exists."
+
+            # Get the existing bucket's region
+            BUCKET_REGION=$(aws s3api get-bucket-location --bucket "$TF_STATE_BUCKET_NAME" --query "LocationConstraint" --output text)
+            if [ "$BUCKET_REGION" = "null" ]; then BUCKET_REGION="us-east-1"; fi  # AWS returns 'null' for us-east-1
+
+            # Compare regions
+            if [ "$BUCKET_REGION" != "$AWS_REGION" ]; then
+              echo "Error: S3 bucket $TF_STATE_BUCKET_NAME exists but in region $BUCKET_REGION, expected $AWS_REGION."
+              exit 1  # Stop execution if the region does not match
+            fi
+
+            echo "Enabling versioning on existing S3 Bucket: $TF_STATE_BUCKET_NAME"
+            aws s3api put-bucket-versioning --bucket "$TF_STATE_BUCKET_NAME" --versioning-configuration Status=Enabled || echo "⚠️ Versioning may already be enabled."
+
+            echo "Enabling server-side encryption on existing S3 Bucket: $TF_STATE_BUCKET_NAME"
+            aws s3api put-bucket-encryption --bucket "$TF_STATE_BUCKET_NAME" --server-side-encryption-configuration '{"Rules":[{"ApplyServerSideEncryptionByDefault":{"SseAlgorithm":"AES256"}}]}' || echo "⚠️ Encryption may already be set."
+
           else
-            echo "Creating S3 Bucket: $TF_STATE_BUCKET_NAME"
-            aws s3api create-bucket --bucket "$TF_STATE_BUCKET_NAME" --region ${{ secrets.AWS_REGION }} --create-bucket-configuration LocationConstraint=${{ secrets.AWS_REGION }}
+            echo "Creating S3 Bucket: $TF_STATE_BUCKET_NAME in region $AWS_REGION"
+            aws s3api create-bucket --bucket "$TF_STATE_BUCKET_NAME" --region "$AWS_REGION" --create-bucket-configuration LocationConstraint="$AWS_REGION"
+
+            echo "Enabling versioning on newly created S3 Bucket: $TF_STATE_BUCKET_NAME"
             aws s3api put-bucket-versioning --bucket "$TF_STATE_BUCKET_NAME" --versioning-configuration Status=Enabled
+
+            echo "Enabling server-side encryption on newly created S3 Bucket: $TF_STATE_BUCKET_NAME"
             aws s3api put-bucket-encryption --bucket "$TF_STATE_BUCKET_NAME" --server-side-encryption-configuration '{"Rules":[{"ApplyServerSideEncryptionByDefault":{"SseAlgorithm":"AES256"}}]}'
           fi
 
@@ -52,7 +79,9 @@ jobs:
       - name: Apply Terraform (Create ECR if not exists)
         run: |
           cd terraform/ecr
-          terraform apply -auto-approve
+              terraform apply -auto-approve \
+              -var="aws_account_id=${{ secrets.AWS_ACCOUNT_ID }}" \
+              -var="aws_region=${{ secrets.AWS_REGION }}"
 
   build-and-push:
     needs: create-ecr
@@ -73,10 +102,34 @@ jobs:
           aws ecr get-login-password --region ${{ secrets.AWS_REGION }} \
           | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com
 
+      - name: Initialize Terraform (Ensure State is Configured)
+        env:
+          TF_STATE_BUCKET_NAME: ${{ vars.TF_STATE_BUCKET_NAME }}
+          TF_STATE_BUCKET_KEY: ${{ vars.TF_STATE_BUCKET_KEY }}
+        run: |
+          cd terraform/ecr
+          terraform init \
+            -backend-config="bucket=$TF_STATE_BUCKET_NAME" \
+            -backend-config="key=$TF_STATE_BUCKET_KEY" \
+            -backend-config="region=${{ secrets.AWS_REGION }}"
+
+      - name: Terraform Apply (Create ECR if not exists)
+        run: |
+          cd terraform/ecr
+          terraform apply -auto-approve \
+            -var="aws_account_id=${{ secrets.AWS_ACCOUNT_ID }}" \
+            -var="aws_region=${{ secrets.AWS_REGION }}"
+
+      - name: Get Terraform Output
+        id: tf-output
+        run: |
+          cd terraform/ecr
+          echo "ECS_REPO_NAME=$(terraform output -raw ecs_repository_name)" >> $GITHUB_ENV
+
       - name: Build and push Docker image
         run: |
           BUILD_NUMBER=${{ github.run_number }}
-          IMAGE_URI=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/blogerio-img:$BUILD_NUMBER
+          IMAGE_URI=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ secrets.AWS_REGION }}.amazonaws.com/$ECS_REPO_NAME:$BUILD_NUMBER
 
           echo "Building Docker image: $IMAGE_URI"
 
