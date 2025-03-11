@@ -27,3 +27,22 @@ variable "default_tags" {
     program = "nextio"
   }
 }
+
+variable "instance_name_prefix" {
+  description = "Prefix for ECS instances"
+  type        = string
+  default     = "ecs-nextio-"
+}
+
+variable "ami_id" {
+  description = "Amazon Linux 2 ECS Optimized AMI ID"
+  type        = string
+  default     = "ami-0b74f796d330ab49c"
+}
+
+variable "instance_type" {
+  description = "EC2 instance type for ECS cluster"
+  type        = string
+  default     = "t3.medium"
+}
+
