@@ -83,8 +83,15 @@ jobs:
               -var="aws_account_id=${{ secrets.AWS_ACCOUNT_ID }}" \
               -var="aws_region=${{ vars.AWS_REGION }}"
 
-  build-and-push:
+  wait-for-infra:
     needs: create-ecr
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Wait for infra-setup
+        run: sleep 400
+
+  build-and-push:
+    needs: wait-for-infra
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout code
@@ -132,8 +139,8 @@ jobs:
           IMAGE_URI=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ vars.AWS_REGION }}.amazonaws.com/$ECS_REPO_NAME:$BUILD_NUMBER
           IMAGE_URI_LATEST=${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ vars.AWS_REGION }}.amazonaws.com/$ECS_REPO_NAME:latest
 
-          echo "Building Docker image: $IMAGE_URI"
-
-          docker build -t $IMAGE_URI -t $IMAGE_URI_LATEST .
-
+          docker build -t $IMAGE_URI .
           docker push $IMAGE_URI
+
+          docker build -t $IMAGE_URI_LATEST .
+          docker push $IMAGE_URI_LATEST
