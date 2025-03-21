@@ -46,6 +46,15 @@ resource "aws_lb_target_group" "alb-tg" {
   vpc_id   = aws_vpc.main.id
   target_type = "instance"
 
+    health_check {
+    path                = "/"
+    interval            = 10
+    timeout             = 5
+    healthy_threshold   = 2
+    unhealthy_threshold = 2
+    matcher             = "200-299" 
+  }
+
   tags = {
     Name = "ALB-TargetGroup-Nextio"
   }
