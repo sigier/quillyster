@@ -46,3 +46,25 @@ variable "instance_type" {
   default     = "t3.medium"
 }
 
+variable "secretsmanager_arn" {
+  description = "Secrets Manager ARN"
+  type        = string
+  default     = "arn:aws:secretsmanager:eu-central-1:785508583814:secret:blogerator-FhQdBx"
+}
+
+variable "secret_keys" {
+  description = "List of secret keys stored in AWS Secrets Manager"
+  type        = list(string)
+  default     = [
+    "AUTH0_SECRET",
+    "AUTH0_ISSUER_BASE_URL",
+    "AUTH0_CLIENT_ID",
+    "AUTH0_CLIENT_SECRET",    
+    "OPENAI_API_KEY",
+    "STRIPE_SECRET_KEY",
+    "STRIPE_PRODUCT_PRICE_ID"
+    "STRIPE_WEBHOOK_SECRET",
+    "MONGODB_URI"
+  ]
+}
+

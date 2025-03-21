@@ -2,11 +2,16 @@ resource "aws_ecs_cluster" "ecs_cluster" {
   name = var.ecs_cluster_name
 }
 
+data "aws_ssm_parameter" "auth0_base_url" {
+  name = "AUTH0_BASE_URL"
+}
 
-resource "aws_ecs_task_definition" "deploy-to-EC2-ecs" {
+
+ resource "aws_ecs_task_definition" "deploy-to-EC2-ecs" {
   family                   = "nextio-deploy-task"
   network_mode             = "bridge"
   requires_compatibilities = ["EC2"]
+  execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn  # Додаємо IAM роль для доступу до Secrets Manager
 
   container_definitions = jsonencode([
     {
@@ -20,15 +25,21 @@ resource "aws_ecs_task_definition" "deploy-to-EC2-ecs" {
           hostPort      = 80
           protocol      = "tcp"
         }
-      ],
-      logConfiguration = {
-        logDriver = "awslogs"
-        options = {
-          awslogs-group         = "/ecs/nextio-container"
-          awslogs-region        = "eu-central-1"
-          awslogs-stream-prefix = "ecs"
+      ]
+
+      environment = [
+        {
+          name  = "AUTH0_BASE_URL"
+          value = data.aws_ssm_parameter.auth0_base_url.value
         }
-      }
+      ]
+
+      secrets = [
+        for secret in var.secret_keys : {
+          name      = secret
+          valueFrom = "${var.secretsmanager_arn}:${secret}"
+        }
+      ]
     }
   ])
 }
