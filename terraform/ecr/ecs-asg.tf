@@ -1,9 +1,10 @@
 resource "aws_autoscaling_group" "ecs_asg" {
   for_each = { for idx, subnet in aws_subnet.private : idx => subnet }
 
-  desired_capacity     = 2
+  desired_capacity     = 1
   min_size            = 1
-  max_size            = 4
+  max_size            = 3
+
 
   vpc_zone_identifier = [each.value.id] 
   launch_template {

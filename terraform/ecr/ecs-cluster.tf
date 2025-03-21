@@ -7,11 +7,20 @@ data "aws_ssm_parameter" "auth0_base_url" {
 }
 
 
+data "aws_secretsmanager_secret_version" "blogerator" {
+  secret_id = "blogerator"
+}
+
+locals {
+  blogerator_secrets = jsondecode(data.aws_secretsmanager_secret_version.blogerator.secret_string)
+}
+
+
  resource "aws_ecs_task_definition" "deploy-to-EC2-ecs" {
   family                   = "nextio-deploy-task"
   network_mode             = "bridge"
   requires_compatibilities = ["EC2"]
-  execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn  # Додаємо IAM роль для доступу до Secrets Manager
+  execution_role_arn       = aws_iam_role.ecs_task_execution_role.arn 
 
   container_definitions = jsonencode([
     {
@@ -27,19 +36,20 @@ data "aws_ssm_parameter" "auth0_base_url" {
         }
       ]
 
-      environment = [
+    environment = concat(
+      [
         {
           name  = "AUTH0_BASE_URL"
           value = data.aws_ssm_parameter.auth0_base_url.value
         }
-      ]
-
-      secrets = [
-        for secret in var.secret_keys : {
-          name      = secret
-          valueFrom = "${var.secretsmanager_arn}:${secret}"
+      ],
+      [
+        for key in var.secret_keys : {
+          name  = key
+          value = local.blogerator_secrets[key]
         }
       ]
+    )
     }
   ])
 }

@@ -15,48 +15,35 @@ resource "aws_iam_role" "ecs_task_execution_role" {
   })
 }
 
-resource "aws_iam_policy" "secrets_manager_access" {
-  name        = "ecsSecretsManagerAccess"
-  description = "Allows ECS tasks to retrieve secrets from Secrets Manager"
+
+resource "aws_iam_policy" "ecr_access" {
+  name        = "ecsECRAccess"
+  description = "Allows ECS tasks to pull images from ECR"
 
   policy = jsonencode({
-    Version = "2012-10-17"
+    Version = "2012-10-17",
     Statement = [
       {
-        Effect   = "Allow"
-        Action   = ["secretsmanager:GetSecretValue"]
-        Resource = "arn:aws:secretsmanager:eu-central-1:785508583814:secret:blogerator"
-      }
-    ]
-  })
-}
-
-resource "aws_iam_policy" "ssm_parameter_access" {
-  name        = "ecsSSMParameterAccess"
-  description = "Allows ECS tasks to retrieve parameters from SSM Parameter Store"
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect   = "Allow"
+        Effect   = "Allow",
         Action   = [
-          "ssm:GetParameter",
-          "ssm:GetParameters",
-          "ssm:GetParameterHistory"
-        ]
-        Resource = "arn:aws:ssm:eu-central-1:785508583814:parameter/AUTH0_BASE_URL"
+          "ecr:GetAuthorizationToken"
+        ],
+        Resource = "*"
+      },
+      {
+        Effect   = "Allow",
+        Action   = [
+          "ecr:BatchCheckLayerAvailability",
+          "ecr:GetDownloadUrlForLayer",
+          "ecr:BatchGetImage"
+        ],
+        Resource = "arn:aws:ecr:eu-central-1:785508583814:repository/blogerator"
       }
     ]
   })
 }
 
-resource "aws_iam_role_policy_attachment" "ecs_secrets_policy_attach" {
+resource "aws_iam_role_policy_attachment" "ecs_ecr_policy_attach" {
   role       = aws_iam_role.ecs_task_execution_role.name
-  policy_arn = aws_iam_policy.secrets_manager_access.arn
-}
-
-resource "aws_iam_role_policy_attachment" "ecs_ssm_policy_attach" {
-  role       = aws_iam_role.ecs_task_execution_role.name
-  policy_arn = aws_iam_policy.ssm_parameter_access.arn
+  policy_arn = aws_iam_policy.ecr_access.arn
 }
