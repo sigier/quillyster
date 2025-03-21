@@ -62,7 +62,7 @@ variable "secret_keys" {
     "AUTH0_CLIENT_SECRET",    
     "OPENAI_API_KEY",
     "STRIPE_SECRET_KEY",
-    "STRIPE_PRODUCT_PRICE_ID"
+    "STRIPE_PRODUCT_PRICE_ID",
     "STRIPE_WEBHOOK_SECRET",
     "MONGODB_URI"
   ]
