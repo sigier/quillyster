@@ -41,10 +41,19 @@ resource "aws_lb" "alb" {
 
 resource "aws_lb_target_group" "alb-tg" {
   name     = "alb-target-group-nextio"
-  port     = 80
+  port     = 3000
   protocol = "HTTP"
   vpc_id   = aws_vpc.main.id
   target_type = "instance"
+
+    health_check {
+    path                = "/"
+    interval            = 10
+    timeout             = 5
+    healthy_threshold   = 2
+    unhealthy_threshold = 2
+    matcher             = "200-299" 
+  }
 
   tags = {
     Name = "ALB-TargetGroup-Nextio"
@@ -57,12 +66,58 @@ resource "aws_lb_listener" "http" {
   protocol          = "HTTP"
 
   default_action {
+    type = "redirect"
+
+    redirect {
+      port        = "443"
+      protocol    = "HTTPS"
+      status_code = "HTTP_301"
+    }
+  }
+
+
+  tags = {
+    Name = "ALB-Listener-Nextio"
+  }
+}
+
+resource "aws_lb_listener" "https" {
+  load_balancer_arn = aws_lb.alb.arn
+  port              = 443
+  protocol          = "HTTPS"
+  ssl_policy        = "ELBSecurityPolicy-2016-08"
+
+  certificate_arn   = var.certificate
+
+  default_action {
     type             = "forward"
     target_group_arn = aws_lb_target_group.alb-tg.arn
   }
 
-    tags = {
-    Name = "ALB-Listener-Nextio"
+  tags = {
+    Name = "ALB-Listener-HTTPS-Nextio"
   }
 }
+
+resource "aws_lb_listener_rule" "deny_raw_alb_access" {
+  listener_arn = aws_lb_listener.https.arn
+  priority     = 1
+
+  action {
+    type = "fixed-response"
+
+    fixed_response {
+      content_type = "text/plain"
+      message_body = "Access denied"
+      status_code  = "403"
+    }
+  }
+
+  condition {
+    host_header {
+      values = ["${aws_lb.alb.dns_name}"]
+    }
+  }
+}
+
 

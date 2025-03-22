@@ -3,7 +3,8 @@ resource "aws_autoscaling_group" "ecs_asg" {
 
   desired_capacity     = 0
   min_size            = 0
-  max_size            = 5
+  max_size            = 0
+
 
   vpc_zone_identifier = [each.value.id] 
   launch_template {

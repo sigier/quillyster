@@ -46,3 +46,24 @@ variable "instance_type" {
   default     = "t3.medium"
 }
 
+variable "secret_keys" {
+  description = "List of secret keys stored in AWS Secrets Manager"
+  type        = list(string)
+  default     = [    
+    "AUTH0_SECRET",
+    "AUTH0_ISSUER_BASE_URL",
+    "AUTH0_CLIENT_ID",
+    "AUTH0_CLIENT_SECRET",  
+    "OPENAI_API_KEY",  
+    "STRIPE_SECRET_KEY",
+    "STRIPE_PRODUCT_PRICE_ID",
+    "STRIPE_WEBHOOK_SECRET",
+    "MONGODB_URI"
+  ]
+}
+
+variable "certificate" {
+  description = "ALB certificate for HTTPS"
+  type        = string
+  default     = "arn:aws:acm:eu-central-1:785508583814:certificate/d7a33c37-1f0d-4eac-aca5-cbcaadbaafcf"
+}
