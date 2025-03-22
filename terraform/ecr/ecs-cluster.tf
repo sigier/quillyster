@@ -30,8 +30,8 @@ locals {
       cpu               = 128
       portMappings = [
         {
-          containerPort = 80
-          hostPort      = 80
+          containerPort = 3000
+          hostPort      = 3000
           protocol      = "tcp"
         }
       ]

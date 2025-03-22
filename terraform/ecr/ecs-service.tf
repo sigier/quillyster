@@ -8,7 +8,7 @@ resource "aws_ecs_service" "nextio_service" {
   load_balancer {
     target_group_arn = aws_lb_target_group.alb-tg.arn
     container_name   = "nextio-container"
-    container_port   = 80
+    container_port   = 3000
   }
 
 

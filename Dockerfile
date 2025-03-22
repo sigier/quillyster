@@ -10,16 +10,17 @@ COPY tailwind.config.js postcss.config.js ./
 
 COPY . .
 
-ENV AUTH0_BASE_URL=""
-ENV AUTH0_SECRET=""
-ENV AUTH0_ISSUER_BASE_URL=""
-ENV AUTH0_CLIENT_ID=""
-ENV AUTH0_CLIENT_SECRET=""
-ENV OPENAI_API_KEY=""
-ENV STRIPE_SECRET_KEY=""
-ENV STRIPE_PRODUCT_PRICE_ID=""
-ENV STRIPE_WEBHOOK_SECRET=""
-ENV MONGODB_URI=""
+ENV AUTH0_BASE_URL="http://localhost"
+ENV AUTH0_SECRET="dummy_secret"
+ENV AUTH0_ISSUER_BASE_URL="https://dummy.auth0.com"
+ENV AUTH0_CLIENT_ID="dummy_client_id"
+ENV AUTH0_CLIENT_SECRET="dummy_client_secret"
+ENV OPENAI_API_KEY="dummy_openai_key"
+ENV STRIPE_SECRET_KEY="dummy_stripe_secret_key"
+ENV STRIPE_PRODUCT_PRICE_ID="dummy_price_id"
+ENV STRIPE_WEBHOOK_SECRET="dummy_webhook_secret"
+ENV MONGODB_URI="mongodb://localhost:27017/dummy"
+
 
 RUN npm run build
 

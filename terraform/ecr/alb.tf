@@ -41,7 +41,7 @@ resource "aws_lb" "alb" {
 
 resource "aws_lb_target_group" "alb-tg" {
   name     = "alb-target-group-nextio"
-  port     = 80
+  port     = 3000
   protocol = "HTTP"
   vpc_id   = aws_vpc.main.id
   target_type = "instance"
@@ -66,12 +66,36 @@ resource "aws_lb_listener" "http" {
   protocol          = "HTTP"
 
   default_action {
+    type = "redirect"
+
+    redirect {
+      port        = "443"
+      protocol    = "HTTPS"
+      status_code = "HTTP_301"
+    }
+  }
+
+
+  tags = {
+    Name = "ALB-Listener-Nextio"
+  }
+}
+
+resource "aws_lb_listener" "https" {
+  load_balancer_arn = aws_lb.alb.arn
+  port              = 443
+  protocol          = "HTTPS"
+  ssl_policy        = "ELBSecurityPolicy-2016-08"
+
+  certificate_arn   = var.certificate
+
+  default_action {
     type             = "forward"
     target_group_arn = aws_lb_target_group.alb-tg.arn
   }
 
-    tags = {
-    Name = "ALB-Listener-Nextio"
+  tags = {
+    Name = "ALB-Listener-HTTPS-Nextio"
   }
 }
 

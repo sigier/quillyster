@@ -61,3 +61,9 @@ variable "secret_keys" {
     "MONGODB_URI"
   ]
 }
+
+variable "certificate" {
+  description = "ALB certificate for HTTPS"
+  type        = string
+  default     = "arn:aws:acm:eu-central-1:785508583814:certificate/d7a33c37-1f0d-4eac-aca5-cbcaadbaafcf"
+}
