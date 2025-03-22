@@ -99,3 +99,25 @@ resource "aws_lb_listener" "https" {
   }
 }
 
+resource "aws_lb_listener_rule" "deny_raw_alb_access" {
+  listener_arn = aws_lb_listener.https.arn
+  priority     = 1
+
+  action {
+    type = "fixed-response"
+
+    fixed_response {
+      content_type = "text/plain"
+      message_body = "Access denied"
+      status_code  = "403"
+    }
+  }
+
+  condition {
+    host_header {
+      values = ["${aws_lb.alb.dns_name}"]
+    }
+  }
+}
+
+
